@@ -13,7 +13,7 @@ def create_app(config_overrides=None):
     from .routes import bp as main_bp
     app.register_blueprint(main_bp)
 
-    # Apply optional config overrides (useful for tests)
+    # Apply optional config overrides
     if config_overrides:
         app.config.update(config_overrides)
 
