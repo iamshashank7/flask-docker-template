@@ -1,0 +1,28 @@
+# Dockerfile.multistage
+FROM python:3.11-slim AS builder
+WORKDIR /app
+
+# important build tools 
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc python3-dev && rm -rf /var/lib/apt/lists/*
+
+# cache-friendly: requirements
+COPY requirements.txt .
+RUN python -m pip install --upgrade pip setuptools wheel
+RUN python -m pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+# final image
+FROM python:3.11-slim
+WORKDIR /app
+
+# libraries & console scripts copy
+COPY --from=builder /install /usr/local
+ENV PATH=/usr/local/bin:$PATH
+
+# app code copy
+COPY . .
+
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+	CMD python -c "import sys, urllib.request;\ntry:\n  urllib.request.urlopen('http://localhost:80/health', timeout=3); sys.exit(0)\nexcept Exception:\n  sys.exit(1)"
+
+CMD ["gunicorn", "--bind", "0.0.0.0:80", "run:app", "--workers", "2", "--threads", "4", "--log-level", "info"]
