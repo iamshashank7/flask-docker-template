@@ -14,11 +14,11 @@ RUN python -m pip install --prefix=/install --no-cache-dir -r requirements.txt
 FROM python:3.11-slim
 WORKDIR /app
 
-# libraries & console scripts copy
+# libraries & console scripts 
 COPY --from=builder /install /usr/local
 ENV PATH=/usr/local/bin:$PATH
 
-# app code copy
+
 COPY . .
 
 EXPOSE 80
